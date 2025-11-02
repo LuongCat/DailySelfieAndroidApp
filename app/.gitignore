@@ -1,0 +1,28 @@
+# Gradle files
+.gradle/
+build/
+
+# Local configuration
+/local.properties
+
+# IntelliJ/Android Studio
+.idea/
+*.iml
+*.iws
+
+# Kotlin
+*.kotlin_module
+
+# Captures
+captures/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Misc
+.externalNativeBuild
+.cxx
