@@ -1,4 +1,4 @@
-package com.example.btqt_nhom3
+package com.example.btqt_nhom3.Photo
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.example.btqt_nhom3.R
 import java.io.File
 
 class PhotoPagerAdapter(private val photos: List<File>) :

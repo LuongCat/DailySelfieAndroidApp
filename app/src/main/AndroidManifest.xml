@@ -6,6 +6,7 @@
         android:name="android.hardware.camera"
         android:required="true" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -16,23 +17,26 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BTQT_Nhom3">
-        <activity
-            android:name=".MainActivity"
+        <activity android:name=".Tools.Security.SplashSecurityActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".CameraActivity"
+            android:name=".MainActivity"
             android:exported="true">
         </activity>
         <activity
-            android:name=".PhotoViewerActivity"
+            android:name=".Camera.CameraActivity"
             android:exported="true">
         </activity>
+        <activity
+            android:name=".Photo.PhotoViewerActivity"
+            android:exported="true">
+        </activity>
+        <receiver android:name=".Notification.SelfieReminderReceiver"/>
     </application>
 
 </manifest>

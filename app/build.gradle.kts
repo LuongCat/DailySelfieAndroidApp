@@ -34,7 +34,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-
+        viewBinding = true
     }
 }
 
@@ -56,4 +56,5 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.androidx.biometric)
 }

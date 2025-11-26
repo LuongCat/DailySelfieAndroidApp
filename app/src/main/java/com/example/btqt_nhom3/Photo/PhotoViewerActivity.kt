@@ -1,10 +1,13 @@
-package com.example.btqt_nhom3
+package com.example.btqt_nhom3.Photo
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import java.io.File
-import androidx.viewpager2.widget.ViewPager2
 import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager2.widget.ViewPager2
+import com.example.btqt_nhom3.R
+import java.io.File
+import android.content.Intent
+import com.example.btqt_nhom3.MainActivity
 
 class PhotoViewerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -12,9 +15,17 @@ class PhotoViewerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_photo_viewer)
 
         val btnBack = findViewById<ImageButton>(R.id.btnBack)
-        btnBack.setOnClickListener { finish() }
+        btnBack.setOnClickListener {
+            if (isTaskRoot) {
+                val intent = Intent(this, MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                finish()
+            } else {
+                finish()
+            }
+        }
 
-        // Lấy ArrayList<String> trực tiếp, tránh deprecated getSerializableExtra
         val photos = intent.getStringArrayListExtra("photos") ?: arrayListOf()
         val startIndex = intent.getIntExtra("start_index", 0)
 

@@ -13,6 +13,7 @@
         app:title="Nhặt ký selfie mỗi ngày"
         app:titleTextColor="@android:color/black">
         <ImageButton
+            android:id="@+id/btnSettings"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_gravity="end|center_vertical"

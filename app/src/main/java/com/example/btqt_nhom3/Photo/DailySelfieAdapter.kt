@@ -1,14 +1,16 @@
-package com.example.btqt_nhom3
+package com.example.btqt_nhom3.Photo
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.btqt_nhom3.R
 import java.io.File
 import java.text.SimpleDateFormat
-import androidx.cardview.widget.CardView
 import java.util.Date
 import java.util.Locale
 
@@ -55,7 +57,8 @@ class DailySelfieAdapter (private val dailySelfies: Map<String, List<File>>)
             timestamp -> "Hôm nay"
             else -> {
                 val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val outputFormat = SimpleDateFormat("'Ngày' dd 'tháng' MM 'năm' yyyy", Locale.getDefault())
+                val outputFormat =
+                    SimpleDateFormat("'Ngày' dd 'tháng' MM 'năm' yyyy", Locale.getDefault())
                 inputFormat.parse(date)?.let { outputFormat.format(it) } ?: date
             }
         }
@@ -79,7 +82,7 @@ class DailySelfieAdapter (private val dailySelfies: Map<String, List<File>>)
         holder.rvDay.layoutManager = GridLayoutManager(holder.itemView.context, 3)
         holder.rvDay.adapter = SelfieAdapter(selfies) { file ->
             val context = holder.itemView.context
-            val intent = android.content.Intent(context, PhotoViewerActivity::class.java)
+            val intent = Intent(context, PhotoViewerActivity::class.java)
             intent.putExtra("file_path", file.absolutePath)
             context.startActivity(intent)
         }

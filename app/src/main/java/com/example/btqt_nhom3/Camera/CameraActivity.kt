@@ -1,21 +1,35 @@
-package com.example.btqt_nhom3
+package com.example.btqt_nhom3.Camera
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.btqt_nhom3.Photo.PhotoViewerActivity
+import com.example.btqt_nhom3.R
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.io.FileOutputStream
+import androidx.core.content.edit
 
 class CameraActivity : AppCompatActivity() {
 
@@ -79,7 +93,7 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        val cameraProviderFuture = ProcessCameraProvider.Companion.getInstance(this)
 
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
@@ -117,8 +131,42 @@ class CameraActivity : AppCompatActivity() {
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
+                @RequiresApi(Build.VERSION_CODES.O)
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    // Tạo ArrayList<String> chứa đường dẫn ảnh
+
+                    // ==== LẬT ẢNH SELFIE (CHỈ ÁP DỤNG CHO CAMERA TRƯỚC) ====
+                    if (cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) {
+                        try {
+                            val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+
+                            // ma trận lật ngang
+                            val matrix = Matrix().apply {
+                                preScale(-1f, 1f)
+                            }
+
+                            val flipped = Bitmap.createBitmap(
+                                bitmap,
+                                0, 0,
+                                bitmap.width,
+                                bitmap.height,
+                                matrix,
+                                true
+                            )
+
+                            // ghi ảnh đã lật lại vào file cũ
+                            FileOutputStream(photoFile).use { out ->
+                                flipped.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                            }
+
+                            val today = java.time.LocalDate.now().toString()
+                            val prefs = this@CameraActivity.getSharedPreferences("SelfiePrefs", Context.MODE_PRIVATE)
+                            prefs.edit { putString("lastSelfieDate", today) }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+
+                    // === CHUYỂN ẢNH QUA PHOTOVIEWER ===
                     val photoList = arrayListOf(photoFile.absolutePath)
 
                     val intent = Intent(this@CameraActivity, PhotoViewerActivity::class.java)
@@ -126,7 +174,7 @@ class CameraActivity : AppCompatActivity() {
                     intent.putExtra("start_index", 0)
                     startActivity(intent)
 
-                    finish() // đóng CameraActivity nếu muốn
+                    finish()
                 }
 
                 override fun onError(exception: ImageCaptureException) {
