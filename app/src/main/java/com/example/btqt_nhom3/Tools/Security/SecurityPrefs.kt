@@ -1,6 +1,7 @@
 package com.example.btqt_nhom3.Tools.Security
 
 import android.content.Context
+import androidx.core.content.edit
 
 object SecurityPrefs {
     private const val PREF = "security_settings"
@@ -9,7 +10,7 @@ object SecurityPrefs {
 
     fun setUsePin(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .edit().putBoolean(KEY_LOCK_PIN, enabled).apply()
+            .edit { putBoolean(KEY_LOCK_PIN, enabled) }
     }
 
     fun isUsePin(context: Context) =
@@ -18,7 +19,7 @@ object SecurityPrefs {
 
     fun setUseFingerprint(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .edit().putBoolean(KEY_FINGERPRINT, enabled).apply()
+            .edit { putBoolean(KEY_FINGERPRINT, enabled) }
     }
 
     fun isUseFingerprint(context: Context) =

@@ -1,6 +1,5 @@
 package com.example.btqt_nhom3.Photo
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,85 +10,99 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.btqt_nhom3.R
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-class DailySelfieAdapter (private val dailySelfies: Map<String, List<File>>)
-    : RecyclerView.Adapter<DailySelfieAdapter.DayViewHolder>() {
+class DailySelfieAdapter(
+    private var dailySelfies: Map<String, List<File>>,
+    private val onPhotoClick: (File) -> Unit,
+    private val onSelectionChanged: ((count: Int, files: List<File>) -> Unit)? = null
+) : RecyclerView.Adapter<DailySelfieAdapter.DayVH>() {
+
+    private val selfieAdapters = mutableListOf<SelfieAdapter>()
 
     private val dateList: List<String>
-        get() {
-            val sorted = dailySelfies.keys.sortedDescending().toMutableList()
+        get() = dailySelfies.keys.sortedDescending()
 
-            val timestamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            val todayMonthDay = SimpleDateFormat("MM-dd", Locale.getDefault()).format(Date())
-
-            if (!sorted.contains(timestamp)) {
-                sorted.add(0, timestamp)
-            }
-
-            val onThisDayExists = dailySelfies.keys.any { it.substring(5, 10) == todayMonthDay && it != timestamp }
-            if (onThisDayExists) {
-                sorted.add(0, "on_this_day")
-            }
-
-            return sorted
-        }
-    class DayViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
-        val tvDay : TextView = itemView.findViewById(R.id.tvDay)
-        val rvDay : RecyclerView = itemView.findViewById(R.id.rvDay)
-        val cvEmpty : CardView = itemView.findViewById(R.id.cvEmpty)
+    class DayVH(item: View) : RecyclerView.ViewHolder(item) {
+        val tvDay: TextView = item.findViewById(R.id.tvDay)
+        val rvDay: RecyclerView = item.findViewById(R.id.rvDay)
+        val cvEmpty: CardView = item.findViewById(R.id.cvEmpty)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_day, parent, false)
-        return DayViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayVH {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_day, parent, false)
+        return DayVH(v)
     }
 
-    override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
-        var date = dateList[position]
+    override fun getItemCount(): Int = dateList.size
 
-        val timestamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    override fun onBindViewHolder(holder: DayVH, position: Int) {
 
-        val displayDate = when (date) {
+        val date = dateList[position]
+        val todayFull = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        // -------- TEXT NGÀY ----------
+        holder.tvDay.text = when (date) {
             "on_this_day" -> "Ngày này năm xưa"
-            timestamp -> "Hôm nay"
+            todayFull -> "Hôm nay"
             else -> {
                 val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val outputFormat =
                     SimpleDateFormat("'Ngày' dd 'tháng' MM 'năm' yyyy", Locale.getDefault())
-                inputFormat.parse(date)?.let { outputFormat.format(it) } ?: date
+                runCatching {
+                    inputFormat.parse(date)?.let { outputFormat.format(it) }
+                }.getOrNull() ?: date
             }
         }
 
-        val selfies = if (date == "on_this_day") {
+        // -------- LẤY DANH SÁCH ẢNH ——
+        val selfies: List<File> = if (date == "on_this_day") {
             val todayMonthDay = SimpleDateFormat("MM-dd", Locale.getDefault()).format(Date())
 
             dailySelfies
-                .filter { (d, _) -> d.substring(5, 10) == todayMonthDay && d != timestamp }
-                .toSortedMap(compareByDescending { it })   // sort key yyyy-MM-dd descending
+                .filter { (d, _) ->
+                    d.length >= 10 &&
+                            d.substring(5, 10) == todayMonthDay &&
+                            d != todayFull
+                }
+                .toSortedMap(compareByDescending { it })
                 .flatMap { it.value }
         } else {
             dailySelfies[date] ?: emptyList()
         }
 
-        holder.tvDay.text = displayDate
+        // -------- UI EMPTY / RECYCLER ----------
+        val hasPhoto = selfies.isNotEmpty()
+        holder.rvDay.visibility = if (hasPhoto) View.VISIBLE else View.GONE
+        holder.cvEmpty.visibility = if (!hasPhoto) View.VISIBLE else View.GONE
 
-        holder.rvDay.visibility = if (selfies.isEmpty()) View.GONE else View.VISIBLE
-        holder.cvEmpty.visibility = if (selfies.isEmpty()) View.VISIBLE else View.GONE
+        val manager = GridLayoutManager(holder.itemView.context, 3)
+        manager.isItemPrefetchEnabled = false
+        holder.rvDay.layoutManager = manager
 
-        holder.rvDay.layoutManager = GridLayoutManager(holder.itemView.context, 3)
-        holder.rvDay.adapter = SelfieAdapter(selfies) { file ->
-            val context = holder.itemView.context
-            val intent = Intent(context, PhotoViewerActivity::class.java)
-            intent.putExtra("file_path", file.absolutePath)
-            context.startActivity(intent)
+        // -------- CHILD ADAPTER -------------
+        val childAdapter = SelfieAdapter(selfies, onPhotoClick) { _ ->
+            val allSelected = selfieAdapters.flatMap { it.getSelectedPhotos() }
+            onSelectionChanged?.invoke(allSelected.size, allSelected)
         }
 
-        holder.rvDay.setHasFixedSize(true)
+        if (!selfieAdapters.contains(childAdapter)) {
+            selfieAdapters.add(childAdapter)
+        }
+
+        holder.rvDay.adapter = childAdapter
+        holder.rvDay.setHasFixedSize(false)
         holder.rvDay.isNestedScrollingEnabled = false
     }
 
-    override fun getItemCount(): Int = dateList.size
+    fun updateData(newData: Map<String, List<File>>) {
+        selfieAdapters.clear()
+        dailySelfies = newData
+        notifyDataSetChanged()
+    }
+
+    fun clearAllSelections() {
+        selfieAdapters.forEach { it.clearSelection(false) }
+        onSelectionChanged?.invoke(0, emptyList())
+    }
 }

@@ -1,43 +1,49 @@
 package com.example.btqt_nhom3
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.io.File
-import android.Manifest
 import android.os.Build
-import android.widget.Toast
-import androidx.annotation.RequiresPermission
-import androidx.core.app.ActivityCompat
-import com.example.btqt_nhom3.Camera.CameraActivity
+import android.os.Bundle
+import android.view.View
 import android.widget.ImageButton
 import android.widget.PopupMenu
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.exifinterface.media.ExifInterface
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.btqt_nhom3.Camera.CameraActivity
 import com.example.btqt_nhom3.Notification.NotificationHelper
 import com.example.btqt_nhom3.Photo.DailySelfieAdapter
+import com.example.btqt_nhom3.Photo.PhotoViewerActivity
 import com.example.btqt_nhom3.Tools.Reminder.ReminderSettingsDialog
 import com.example.btqt_nhom3.Tools.Security.PinAuthDialog
 import com.example.btqt_nhom3.Tools.Security.SecurityPrefs
 import com.example.btqt_nhom3.Tools.Security.SecuritySettingsDialog
+import com.example.btqt_nhom3.Tools.Timelapse.TimelapseActivity
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: DailySelfieAdapter
-    private val dailySelfies = mutableMapOf<String, List<File>>()
 
-    private val PERMISSION_REQUEST_CODE = 1001
+    private val dailySelfies = mutableMapOf<String, List<File>>()
+    private var allPhotos: List<File> = emptyList()
+    private val selectedPhotos = mutableSetOf<File>()
+
     private val REQUIRED_PERMISSIONS = mutableListOf(
-        Manifest.permission.CAMERA,
+        Manifest.permission.CAMERA
     ).apply {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             add(Manifest.permission.POST_NOTIFICATIONS)
-        }
     }.toTypedArray()
 
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -45,64 +51,35 @@ class MainActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.rvSelfies)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        adapter = DailySelfieAdapter(dailySelfies)
+        val deleteBar = findViewById<View>(R.id.deleteBar)
+        val btnDelete = findViewById<ImageButton>(R.id.btnDelete)
+        val btnCamera = findViewById<FloatingActionButton> (R.id.btnTakeSelfie)
+
+        adapter = DailySelfieAdapter(
+            dailySelfies,
+            ::onPhotoClicked,
+        ) { count, files ->
+            selectedPhotos.clear()
+            selectedPhotos.addAll(files)
+            deleteBar.visibility = if (count > 0) View.VISIBLE else View.GONE
+            btnCamera.visibility = if (count > 0) View.GONE else View.VISIBLE
+        }
+
         recyclerView.adapter = adapter
 
-        requestNecessaryPermissions()
-
+        requestPermissionsIfNeeded()
         loadSelfies()
 
-        findViewById<FloatingActionButton>(R.id.btnTakeSelfie).setOnClickListener {
-            openCamera();
-        }
-
-        val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
-
-        btnSettings.setOnClickListener { view ->
-            val popup = PopupMenu(this, view)
-
-            popup.menu.add("Cài đặt nhắc nhở")
-            popup.menu.add("Tạo video Time-lapse")
-            popup.menu.add("Sao lưu & Đồng bộ")
-            popup.menu.add("Cài đặt bảo mật")
-
-            popup.setOnMenuItemClickListener { item ->
-                when (item.title) {
-                    "Cài đặt nhắc nhở" -> {
-                        ReminderSettingsDialog.show(this)
-                    }
-                    "Tạo video Time-lapse" -> {
-                        // TODO
-                    }
-                    "Sao lưu & Đồng bộ" -> {
-                        // TODO
-                    }
-                    "Cài đặt bảo mật" -> {
-                        if (SecurityPrefs.isUsePin(this)) {
-
-                            PinAuthDialog.show(
-                                activity = this,
-                                onSuccess = {
-                                    SecuritySettingsDialog.show(this)
-                                },
-                                onFailed = {
-                                    // người dùng thoát PIN → không mở settings
-                                }
-                            )
-
-                        } else {
-                            SecuritySettingsDialog.show(this)
-                        }
-                    }
-                }
-                true
-            }
-
-            popup.show()
-        }
+        setupDeleteButton(btnDelete)
+        var btnClearSelection: ImageButton
+        btnClearSelection = findViewById(R.id.btnClearSelection)
+        setupClearSelectionButton(btnClearSelection)
 
 
-        NotificationHelper.createNotificationChannel(this);
+        setupTakePhotoButton()
+        setupSettingsMenu()
+
+        NotificationHelper.createNotificationChannel(this)
     }
 
     override fun onResume() {
@@ -110,57 +87,155 @@ class MainActivity : AppCompatActivity() {
         loadSelfies()
     }
 
-    private fun requestNecessaryPermissions() {
-        val notGranted = REQUIRED_PERMISSIONS.filter {
+    private fun requestPermissionsIfNeeded() {
+        val need = REQUIRED_PERMISSIONS.filter {
             ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-
-        if (notGranted.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), PERMISSION_REQUEST_CODE)
+        if (need.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, need.toTypedArray(), 1001)
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            for ((index, result) in grantResults.withIndex()) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    val perm = permissions[index]
-                    Toast.makeText(this, "Permission denied: $perm", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
+    // ===========================================================
+    // LOAD SELFIES
+    // ===========================================================
     private fun loadSelfies() {
         val selfieDir = File(filesDir, "selfies")
-
-        val allFiles = selfieDir.listFiles()?.toList() ?: emptyList()
+        val allFiles = selfieDir.listFiles()?.filter { it.isFile } ?: emptyList()
 
         val grouped = allFiles.groupBy { file ->
-            // File name format: yyyy-MM-dd_HH-mm-ss.jpg
-            file.name.substring(0, 10) // lấy yyyy-MM-dd
-        }
+            try {
+                val exif = ExifInterface(file.absolutePath)
+                val raw =
+                    exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
+                        ?: exif.getAttribute(ExifInterface.TAG_DATETIME)
 
-        val sortedGrouped = grouped.mapValues { entry ->
-            entry.value.sortedByDescending { file ->
-                val timePart = file.name.substring(11, 19) // HH-mm-ss
-                timePart
+                if (raw != null) {
+                    val input = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault())
+                    val output = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    output.format(input.parse(raw)!!)
+                } else {
+                    val out = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    out.format(Date(file.lastModified()))
+                }
+            } catch (_: Exception) {
+                val out = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                out.format(Date(file.lastModified()))
             }
         }
 
         dailySelfies.clear()
-        dailySelfies.putAll(sortedGrouped)
+        dailySelfies.putAll(
+            grouped.mapValues { (_, v) -> v.sortedByDescending { it.lastModified() } }
+        )
 
-        adapter.notifyDataSetChanged()
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        if (!dailySelfies.containsKey(today)) {
+            dailySelfies[today] = emptyList()
+        }
+
+        allPhotos = dailySelfies.values.flatten()
+
+        adapter.updateData(dailySelfies)
     }
 
-    private fun openCamera() {
-        startActivity(Intent(this, CameraActivity::class.java))
+    // ===========================================================
+    // DELETE
+    // ===========================================================
+    private fun setupDeleteButton(btn: ImageButton) {
+        btn.setOnClickListener {
+            if (selectedPhotos.isEmpty()) return@setOnClickListener
+
+            AlertDialog.Builder(this)
+                .setTitle("Xóa ảnh")
+                .setMessage("Bạn có chắc muốn xóa ${selectedPhotos.size} ảnh?")
+                .setPositiveButton("Xóa") { _, _ ->
+                    selectedPhotos.forEach { f ->
+                        if (f.exists()) f.delete()
+                    }
+                    exitSelectionMode()
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
+        }
+    }
+
+    private fun setupClearSelectionButton(btn: ImageButton) {
+        btn.setOnClickListener {
+            selectedPhotos.clear()
+            adapter.clearAllSelections()
+            findViewById<View>(R.id.deleteBar).visibility = View.GONE
+
+            loadSelfies()
+        }
+    }
+
+    private fun exitSelectionMode() {
+        selectedPhotos.clear()
+        adapter.clearAllSelections()
+        findViewById<View>(R.id.deleteBar).visibility = View.GONE
+        findViewById<FloatingActionButton> (R.id.btnTakeSelfie).visibility = View.VISIBLE
+
+        loadSelfies()
+    }
+
+    // ===========================================================
+    // ON PHOTO CLICK
+    // ===========================================================
+    private fun onPhotoClicked(file: File) {
+        val index = allPhotos.indexOf(file)
+        if (index < 0) {
+            loadSelfies()
+            return
+        }
+        val i = Intent(this, PhotoViewerActivity::class.java).apply {
+            putStringArrayListExtra(
+                "photos",
+                ArrayList(allPhotos.map { it.absolutePath })
+            )
+            putExtra("start_index", index)
+        }
+        startActivity(i)
+    }
+
+    private fun setupTakePhotoButton() {
+        findViewById<FloatingActionButton>(R.id.btnTakeSelfie).setOnClickListener {
+            startActivity(Intent(this, CameraActivity::class.java))
+        }
+    }
+
+    private fun setupSettingsMenu() {
+        val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
+
+        btnSettings.setOnClickListener { view ->
+            val popup = PopupMenu(this, view)
+            popup.menu.add("Cài đặt nhắc nhở")
+            popup.menu.add("Tạo video Time-lapse")
+            popup.menu.add("Cài đặt bảo mật")
+
+            popup.setOnMenuItemClickListener { item ->
+                when (item.title) {
+                    "Cài đặt nhắc nhở" ->
+                        ReminderSettingsDialog.show(this)
+
+                    "Tạo video Time-lapse" ->
+                        startActivity(Intent(this, TimelapseActivity::class.java))
+
+                    "Cài đặt bảo mật" -> {
+                        if (SecurityPrefs.isUsePin(this)) {
+                            PinAuthDialog.show(
+                                this,
+                                onSuccess = { SecuritySettingsDialog.show(this) },
+                                onFailed = {}
+                            )
+                        } else {
+                            SecuritySettingsDialog.show(this)
+                        }
+                    }
+                }
+                true
+            }
+            popup.show()
+        }
     }
 }

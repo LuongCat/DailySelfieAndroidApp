@@ -41,6 +41,9 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.gridlayout)
+    implementation(libs.androidx.exifinterface)
+    implementation(libs.googleid)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -57,4 +60,21 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.biometric)
+
+    implementation("com.davemorrissey.labs:subsampling-scale-image-view:3.10.0")
+
+    implementation("com.vanniktech:android-image-cropper:4.7.0")
+    // Credential Manager
+//    implementation ("androidx.credentials:credentials:1.2.0")
+//    implementation ("androidx.credentials:credentials-play-services-auth:1.2.0")
+//    // Google Identity Services (new Sign-In)
+//    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+//    // Authorization API (để request quyền Google Drive)
+//    implementation ("com.google.android.libraries.identity.googleid:googleid-authorization:1.1.0")
+//    // OkHttp for REST API
+//    implementation ("com.squareup.okhttp3:okhttp:4.12.0")
+//    // JSON
+//    implementation ("org.json:json:20231013")
+//    implementation("com.google.android.gms:play-services-auth:21.4.0")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

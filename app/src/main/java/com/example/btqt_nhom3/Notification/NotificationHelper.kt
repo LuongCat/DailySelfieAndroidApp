@@ -61,13 +61,11 @@ object NotificationHelper {
 
             val channel =
                 NotificationChannel(CHANNEL_ID, name, importance)
-            channel.setDescription(description)
+            channel.description = description
 
             val notificationManager =
-                context.getSystemService<NotificationManager?>(NotificationManager::class.java)
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel)
-            }
+                context.getSystemService(NotificationManager::class.java)
+            notificationManager?.createNotificationChannel(channel)
         }
     }
 }

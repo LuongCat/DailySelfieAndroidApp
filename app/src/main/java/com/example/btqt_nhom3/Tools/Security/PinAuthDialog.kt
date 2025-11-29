@@ -23,17 +23,14 @@ object PinAuthDialog {
 
         val savedPin = PinManager.getPin(activity)
 
-        // Title
         binding.txtTitle.text = "Nhập mã PIN để mở khóa"
         binding.btnCancel.text = "Thoát"
 
-        // -------- NÚT THOÁT --------
         binding.btnCancel.setOnClickListener {
             dialog.dismiss()
             onFailed()
         }
 
-        // -------- NÚT XÁC NHẬN PIN --------
         binding.btnOK.setOnClickListener {
             val pin = binding.edtPin.text.toString()
             if (pin == savedPin) {
@@ -50,7 +47,6 @@ object PinAuthDialog {
         }
 
 
-        // -------- NÚT DÙNG VÂN TAY (nếu bật) --------
         if (SecurityPrefs.isUseFingerprint(activity)) {
             binding.btnFingerprint.apply {
                 visibility = android.view.View.VISIBLE

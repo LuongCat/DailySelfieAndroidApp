@@ -13,7 +13,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Thumbnail -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/btnThumbnail"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/circle_image"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
 
     <!-- Capture button -->
     <ImageButton
@@ -21,13 +34,13 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:background="@drawable/white_round_button"
-        android:src="@android:drawable/ic_menu_camera"
+        android:src="@drawable/ic_circle"
         android:contentDescription="Capture"
+        android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:maxImageSize="48dp"
-        android:layout_marginBottom="32dp" />
+        app:tint="#FFAA00"/>
 
     <!-- Switch camera button -->
     <ImageButton
@@ -35,11 +48,11 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:background="@drawable/white_round_button"
-        android:src="@android:drawable/ic_menu_rotate"
+        android:src="@drawable/ic_camera_switch"
         android:contentDescription="Switch camera"
+        android:layout_margin="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:maxImageSize="36dp"
-        android:layout_margin="32dp" />
+        app:tint="@color/black" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

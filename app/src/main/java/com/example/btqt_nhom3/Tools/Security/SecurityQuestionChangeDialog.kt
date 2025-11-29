@@ -17,7 +17,6 @@ object SecurityQuestionChangeDialog {
             .setCancelable(false)
             .create()
 
-        // Nếu đã có câu hỏi cũ → điền sẵn để user chỉnh sửa
         val oldQuestion = SecurityQuestionManager.getQuestion(context)
         if (oldQuestion != null) binding.edtQuestion.setText(oldQuestion)
 

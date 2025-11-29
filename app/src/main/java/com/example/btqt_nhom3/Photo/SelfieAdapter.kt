@@ -1,6 +1,6 @@
 package com.example.btqt_nhom3.Photo
 
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,40 +11,67 @@ import com.example.btqt_nhom3.R
 import java.io.File
 
 class SelfieAdapter(
-    private val selfies: List<File>,
-    private val onClick: (File) -> Unit
-) : RecyclerView.Adapter<SelfieAdapter.SelfieViewHolder>() {
+    private val photos: List<File>,
+    private val onPhotoClick: (File) -> Unit,
+    private val onSelectionChanged: (Int) -> Unit
+) : RecyclerView.Adapter<SelfieAdapter.VH>() {
 
-    class SelfieViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val imageView: ImageView = itemView.findViewById(R.id.imgSelfie)
+    private val selected = mutableSetOf<File>()
+    var selectionMode = false
+
+    class VH(v: View) : RecyclerView.ViewHolder(v) {
+        val img: ImageView = v.findViewById(R.id.imgSelfie)
+        val overlay: View = v.findViewById(R.id.selectionOverlay)
+        val shadow: View = v.findViewById(R.id.selectionShadow)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SelfieViewHolder {
-        val view = LayoutInflater.from(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val v = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_selfie, parent, false)
-        return SelfieViewHolder(view)
+        return VH(v)
     }
 
-    override fun onBindViewHolder(holder: SelfieViewHolder, position: Int) {
-        val file = selfies[position]
+    override fun getItemCount() = photos.size
 
-        holder.imageView.load(file) {
-            crossfade(true)
-            placeholder(android.R.drawable.ic_menu_gallery)
-            error(android.R.drawable.ic_delete)
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        val f = photos[position]
+        holder.img.load(f)
+
+        val isSel = selected.contains(f)
+        holder.overlay.visibility = if (isSel) View.VISIBLE else View.GONE
+        holder.shadow.alpha = if (isSel) 0.3f else 0f
+
+        holder.itemView.setOnClickListener {
+            if (selectionMode) toggle(f)
+            else onPhotoClick(f)
         }
 
-        holder.imageView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, PhotoViewerActivity::class.java)
-
-            intent.putExtra("photos", selfies.map { it.absolutePath } as ArrayList<String>)
-            intent.putExtra("start_index", position)
-
-            context.startActivity(intent)
+        holder.itemView.setOnLongClickListener {
+            if (!selectionMode) {
+                selectionMode = true
+                toggle(f)
+            }
+            true
         }
-
     }
 
-    override fun getItemCount(): Int = selfies.size
+    @SuppressLint("NotifyDataSetChanged")
+    private fun toggle(f: File) {
+        if (selected.contains(f)) selected.remove(f) else selected.add(f)
+
+        if (selected.isEmpty()) selectionMode = false
+
+        notifyDataSetChanged()
+        onSelectionChanged(selected.size)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clearSelection(notify: Boolean = true) {
+        selected.clear()
+        selectionMode = false
+        notifyDataSetChanged()
+        if (notify) onSelectionChanged(0)
+    }
+
+    fun getSelectedPhotos(): List<File> = selected.toList()
 }

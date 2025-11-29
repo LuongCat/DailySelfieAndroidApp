@@ -44,7 +44,6 @@ object PinChangeDialog {
                         return@setOnClickListener
                     }
 
-                    // LƯU PIN
                     PinManager.savePin(context, pin)
                     dialog.dismiss()
                     onSuccess()

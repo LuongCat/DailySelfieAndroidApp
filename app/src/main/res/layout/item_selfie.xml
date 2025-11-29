@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_margin="4dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
-    
+    android:layout_height="150dp"
+    android:layout_margin="6dp">
+
     <ImageView
         android:id="@+id/imgSelfie"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        android:contentDescription="Selfie image" />
+        android:background="@drawable/selfie_rounded_bg"
+        android:clipToOutline="true"/>
 
-</androidx.cardview.widget.CardView>
+    <View
+        android:id="@+id/selectionShadow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:alpha="0"
+        android:visibility="visible" />
+    <View
+        android:id="@+id/selectionOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/selected_border"
+        android:visibility="gone" />
+</FrameLayout>

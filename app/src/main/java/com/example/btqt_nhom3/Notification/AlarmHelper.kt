@@ -17,10 +17,8 @@ object AlarmHelper {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Xóa lịch cũ
         alarmMgr.cancel(pendingIntent)
 
-        // Lấy giờ phút
         val parts = time.split(":")
         val hour = parts[0].toInt()
         val minute = parts[1].toInt()

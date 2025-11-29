@@ -17,9 +17,11 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_gravity="end|center_vertical"
-            android:background="@drawable/gray_round_button"
+            android:background="@drawable/white_round_button"
             android:src="@drawable/ic_settings"
-            android:layout_margin="20dp"/>
+            android:layout_margin="20dp"
+            app:tint="@color/black"
+            android:contentDescription="Tùy chọn nâng cao"/>
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -38,11 +40,45 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="30dp"
-        android:src="@android:drawable/ic_menu_camera"
+        android:src="@drawable/ic_camera"
         app:backgroundTint="#0078D7"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:maxImageSize="36dp"
-        app:tint="@android:color/white" />
+        app:tint="@android:color/white"
+        android:contentDescription="Chụp ảnh"/>
+
+    <LinearLayout
+        android:id="@+id/deleteBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        app:layout_constraintTop_toTopOf="parent"
+        android:gravity="center"
+        android:background="#DDDDDD"
+        android:visibility="gone"
+        >
+
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_delete"
+            android:contentDescription="Xóa"
+            app:tint="@color/black"
+            android:layout_marginHorizontal="40dp"/>
+
+        <ImageButton
+            android:id="@+id/btnClearSelection"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_cancel"
+            android:contentDescription="Hủy"
+            app:tint="@color/black"
+            android:layout_marginHorizontal="40dp"/>
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.example.btqt_nhom3.Tools.Reminder
 
+import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import android.content.Context
 import android.view.LayoutInflater
@@ -7,12 +8,14 @@ import androidx.appcompat.app.AlertDialog
 import com.example.btqt_nhom3.Notification.AlarmHelper
 import com.example.btqt_nhom3.databinding.DialogReminderSettingsBinding
 import java.util.Calendar
+import androidx.core.content.edit
 
 object ReminderSettingsDialog {
 
     private const val PREF_NAME = "reminder_pref"
     private const val KEY_TIME = "reminder_time"
 
+    @SuppressLint("DefaultLocale")
     fun show(context: Context) {
         val binding = DialogReminderSettingsBinding.inflate(LayoutInflater.from(context))
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -34,24 +37,21 @@ object ReminderSettingsDialog {
             val btnClear = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
             val btnClose = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
 
-            // Lưu giờ
             btnSave.setOnClickListener {
                 val time = binding.txtTime.text.toString()
                 if (time != "Chưa đặt") {
-                    prefs.edit().putString(KEY_TIME, time).apply()
+                    prefs.edit { putString(KEY_TIME, time) }
                     AlarmHelper.setReminder(context, time)
                 }
                 dialog.dismiss()
             }
 
-            // Xóa giờ
             btnClear.setOnClickListener {
-                prefs.edit().remove(KEY_TIME).apply()
+                prefs.edit { remove(KEY_TIME) }
                 AlarmHelper.cancelReminder(context)
                 dialog.dismiss()
             }
 
-            // Đóng
             btnClose.setOnClickListener {
                 dialog.dismiss()
             }

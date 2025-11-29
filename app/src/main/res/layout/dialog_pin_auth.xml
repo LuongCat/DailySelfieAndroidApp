@@ -18,6 +18,7 @@
     <EditText
         android:id="@+id/edtPin"
         android:hint="••••"
+        android:autofillHints="false"
         android:inputType="numberPassword"
         android:maxLength="4"
         android:gravity="center"
