@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.PopupMenu
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -37,8 +38,14 @@ class MainActivity : AppCompatActivity() {
     private var allPhotos: List<File> = emptyList()
     private val selectedPhotos = mutableSetOf<File>()
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private val REQUIRED_PERMISSIONS = mutableListOf(
-        Manifest.permission.CAMERA
+        Manifest.permission.CAMERA,
+        Manifest.permission.SCHEDULE_EXACT_ALARM,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.INTERNET,
+        Manifest.permission.RECEIVE_BOOT_COMPLETED,
     ).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             add(Manifest.permission.POST_NOTIFICATIONS)
