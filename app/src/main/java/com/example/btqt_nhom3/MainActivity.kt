@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     private val REQUIRED_PERMISSIONS = mutableListOf(
+        Manifest.permission.POST_NOTIFICATIONS,
         Manifest.permission.CAMERA,
         Manifest.permission.SCHEDULE_EXACT_ALARM,
         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity() {
             add(Manifest.permission.POST_NOTIFICATIONS)
     }.toTypedArray()
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -94,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         loadSelfies()
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun requestPermissionsIfNeeded() {
         val need = REQUIRED_PERMISSIONS.filter {
             ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
