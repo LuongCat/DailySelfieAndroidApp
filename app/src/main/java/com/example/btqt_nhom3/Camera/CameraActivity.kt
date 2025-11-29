@@ -229,7 +229,7 @@ class CameraActivity : AppCompatActivity() {
             // =====================================
             // SET NGÀY GIẢ Ở ĐÂY NÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈ
             // =====================================
-            setFakeDate(photoFile, 2024, 12, 25)
+            //setFakeDate(photoFile, 2024, 12, 25)
 
             FeelingManager.saveFeeling(photoFile.absolutePath, "🙂", "Hôm nay thế nào nhỉ?")
 
