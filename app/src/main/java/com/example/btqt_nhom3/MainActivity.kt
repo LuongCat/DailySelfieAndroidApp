@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -34,9 +35,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: DailySelfieAdapter
 
-    private val dailySelfies = mutableMapOf<String, List<File>>()
+    private var dailySelfies = mutableMapOf<String, List<File>>()
     private var allPhotos: List<File> = emptyList()
+
+    // ---- GLOBAL SELECT MODE ----
     private val selectedPhotos = mutableSetOf<File>()
+    var globalSelectionMode = false
 
     @RequiresApi(Build.VERSION_CODES.S)
     private val REQUIRED_PERMISSIONS = mutableListOf(
@@ -67,12 +71,20 @@ class MainActivity : AppCompatActivity() {
         adapter = DailySelfieAdapter(
             dailySelfies,
             ::onPhotoClicked,
-        ) { count, files ->
-            selectedPhotos.clear()
-            selectedPhotos.addAll(files)
-            deleteBar.visibility = if (count > 0) View.VISIBLE else View.GONE
-            btnCamera.visibility = if (count > 0) View.GONE else View.VISIBLE
-        }
+
+            { count, files ->
+                selectedPhotos.clear()
+                selectedPhotos.addAll(files)
+                deleteBar.visibility = if (count > 0) View.VISIBLE else View.GONE
+                btnCamera.visibility = if (count > 0) View.GONE else View.VISIBLE
+            },
+
+            { globalSelectionMode },
+
+            {
+                globalSelectionMode = true
+            }
+        )
 
         recyclerView.adapter = adapter
 
@@ -80,14 +92,9 @@ class MainActivity : AppCompatActivity() {
         loadSelfies()
 
         setupDeleteButton(btnDelete)
-        var btnClearSelection: ImageButton
-        btnClearSelection = findViewById(R.id.btnClearSelection)
-        setupClearSelectionButton(btnClearSelection)
-
-
+        setupClearSelectionButton(findViewById(R.id.btnClearSelection))
         setupTakePhotoButton()
         setupSettingsMenu()
-
         NotificationHelper.createNotificationChannel(this)
     }
 
@@ -146,6 +153,32 @@ class MainActivity : AppCompatActivity() {
 
         allPhotos = dailySelfies.values.flatten()
 
+        val sdfFull = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfMonthDay = SimpleDateFormat("MM-dd", Locale.getDefault())
+
+        val todayDate = Date()
+        val todayFull = sdfFull.format(todayDate)
+        val todayMD = sdfMonthDay.format(todayDate)
+
+        val previousYearPhotos = grouped
+            .filter { (key, _) ->
+                try {
+                    val md = key.substring(5)
+                    md == todayMD && key != todayFull
+                } catch (_: Exception) { false }
+            }
+            .flatMap { it.value }
+            .sortedByDescending { it.lastModified() }
+
+        dailySelfies["on_this_day"] = previousYearPhotos
+
+        dailySelfies = LinkedHashMap<String, List<File>>().apply {
+            put("on_this_day", previousYearPhotos)
+            dailySelfies.forEach { (k, v) ->
+                if (k != "on_this_day") put(k, v)
+            }
+        }
+
         adapter.updateData(dailySelfies)
     }
 
@@ -172,16 +205,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClearSelectionButton(btn: ImageButton) {
         btn.setOnClickListener {
-            selectedPhotos.clear()
-            adapter.clearAllSelections()
-            findViewById<View>(R.id.deleteBar).visibility = View.GONE
-
-            loadSelfies()
+            exitSelectionMode()
         }
     }
 
     private fun exitSelectionMode() {
         selectedPhotos.clear()
+        globalSelectionMode = false
+
         adapter.clearAllSelections()
         findViewById<View>(R.id.deleteBar).visibility = View.GONE
         findViewById<FloatingActionButton> (R.id.btnTakeSelfie).visibility = View.VISIBLE
@@ -193,6 +224,9 @@ class MainActivity : AppCompatActivity() {
     // ON PHOTO CLICK
     // ===========================================================
     private fun onPhotoClicked(file: File) {
+        // nếu đang chọn thì click là toggle, không mở viewer
+        if (globalSelectionMode) return
+
         val index = allPhotos.indexOf(file)
         if (index < 0) {
             loadSelfies()
@@ -221,6 +255,7 @@ class MainActivity : AppCompatActivity() {
             val popup = PopupMenu(this, view)
             popup.menu.add("Cài đặt nhắc nhở")
             popup.menu.add("Tạo video Time-lapse")
+            popup.menu.add("Sao lưu và đồng bộ")
             popup.menu.add("Cài đặt bảo mật")
 
             popup.setOnMenuItemClickListener { item ->
@@ -230,6 +265,9 @@ class MainActivity : AppCompatActivity() {
 
                     "Tạo video Time-lapse" ->
                         startActivity(Intent(this, TimelapseActivity::class.java))
+
+                    "Sao lưu và đồng bộ" ->
+                        Toast.makeText(this,"Cooming soon...",Toast.LENGTH_SHORT).show()
 
                     "Cài đặt bảo mật" -> {
                         if (SecurityPrefs.isUsePin(this)) {

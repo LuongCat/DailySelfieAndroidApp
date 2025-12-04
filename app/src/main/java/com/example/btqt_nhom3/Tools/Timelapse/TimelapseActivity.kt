@@ -12,6 +12,11 @@ import com.example.btqt_nhom3.R
 import java.text.SimpleDateFormat
 import java.util.*
 import java.io.File
+import android.view.View
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class TimelapseActivity : AppCompatActivity() {
 
@@ -21,6 +26,8 @@ class TimelapseActivity : AppCompatActivity() {
 
     private lateinit var txtSpeedLabel: TextView
     private lateinit var seekFrames: SeekBar
+
+    private lateinit var loadingOverlay: View
 
     private var startDate = ""
     private var endDate = ""
@@ -43,6 +50,7 @@ class TimelapseActivity : AppCompatActivity() {
         btnCreate = findViewById(R.id.btnCreateTimelapse)
         txtSpeedLabel = findViewById(R.id.txtSpeedLabel)
         seekFrames = findViewById(R.id.seekFrames)
+        loadingOverlay = findViewById(R.id.loadingOverlay)
 
         seekFrames.max = 10
         seekFrames.progress = 1
@@ -129,15 +137,37 @@ class TimelapseActivity : AppCompatActivity() {
             return
         }
 
-        val fps = 30.0
-        val framesPerImage = (fps / imagesPerSecond).toInt()
+        showLoading()
 
-        val output = TimeLapseGenerator.generate(
-            this, images, start, end, framesPerImage
-        )
+        // CHUYỂN PHẦN NẶNG SANG BACKGROUND
+        lifecycleScope.launch(Dispatchers.IO) {
 
-        Toast.makeText(this, "Video đã tạo: ${output.absolutePath}", Toast.LENGTH_LONG).show()
-        loadTimelapseVideos()
+            val fps = 30.0
+            val framesPerImage = (fps / imagesPerSecond).toInt()
+
+            val output = TimeLapseGenerator.generate(
+                this@TimelapseActivity, images, start, end, framesPerImage
+            )
+
+            withContext(Dispatchers.Main) {
+                hideLoading()
+                Toast.makeText(
+                    this@TimelapseActivity,
+                    "Video đã tạo: ${output.absolutePath}",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                loadTimelapseVideos()
+            }
+        }
+    }
+
+    private fun showLoading() {
+        loadingOverlay.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        loadingOverlay.visibility = View.GONE
     }
 
     private fun loadTimelapseVideos() {

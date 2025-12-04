@@ -35,6 +35,7 @@ import java.util.concurrent.Executors
 import com.google.android.material.imageview.ShapeableImageView
 import coil.load
 import androidx.exifinterface.media.ExifInterface
+import com.example.btqt_nhom3.MainActivity
 
 
 class CameraActivity : AppCompatActivity() {
@@ -59,6 +60,15 @@ class CameraActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         btnCapture = findViewById(R.id.btnCapture)
         btnSwitch = findViewById(R.id.btnSwitch)
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
+            if (isTaskRoot) {
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+                finish()
+            } else {
+                finish()
+            }
+        }
 
         if (!hasPermission()) requestPermission() else startCamera()
 
@@ -229,7 +239,7 @@ class CameraActivity : AppCompatActivity() {
             // =====================================
             // SET NGÀY GIẢ Ở ĐÂY NÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈÈ
             // =====================================
-            //setFakeDate(photoFile, 2024, 12, 25)
+            //setFakeDate(photoFile, 2022, 12, 4)
 
             FeelingManager.saveFeeling(photoFile.absolutePath, "🙂", "Hôm nay thế nào nhỉ?")
 

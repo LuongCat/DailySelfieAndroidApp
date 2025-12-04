@@ -185,7 +185,7 @@ class PhotoViewerActivity : AppCompatActivity() {
 
         edtFeeling.setText(txtFeeling.text.toString())
 
-        val emojiList = listOf("😀","😊","😁","🤣","😍","😘","😎","🤗","😢","😭","😡","😴","🤔","😇","🥲","😜")
+        val emojiList = listOf("😀","😊","😁","🤣","😍","❤️","💔","😮","😘","😎","🤗","😢","😭","😡","😴","🤔","😇","🥲","😜")
         var selectedEmoji = txtEmoji.text.toString()
 
         emojiList.forEach { emo ->

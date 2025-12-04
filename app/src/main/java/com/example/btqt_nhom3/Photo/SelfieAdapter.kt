@@ -13,11 +13,13 @@ import java.io.File
 class SelfieAdapter(
     private val photos: List<File>,
     private val onPhotoClick: (File) -> Unit,
-    private val onSelectionChanged: (Int) -> Unit
+    private val onSelectionChanged: (Int) -> Unit,
+
+    private val isSelecting: () -> Boolean,
+    private val onStartSelection: () -> Unit
 ) : RecyclerView.Adapter<SelfieAdapter.VH>() {
 
     private val selected = mutableSetOf<File>()
-    var selectionMode = false
 
     class VH(v: View) : RecyclerView.ViewHolder(v) {
         val img: ImageView = v.findViewById(R.id.imgSelfie)
@@ -35,6 +37,7 @@ class SelfieAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val f = photos[position]
+
         holder.img.load(f)
 
         val isSel = selected.contains(f)
@@ -42,33 +45,35 @@ class SelfieAdapter(
         holder.shadow.alpha = if (isSel) 0.3f else 0f
 
         holder.itemView.setOnClickListener {
-            if (selectionMode) toggle(f)
-            else onPhotoClick(f)
+            if (isSelecting()) {
+                toggle(f)
+            } else {
+                onPhotoClick(f)
+            }
         }
 
         holder.itemView.setOnLongClickListener {
-            if (!selectionMode) {
-                selectionMode = true
-                toggle(f)
+            if (!isSelecting()) {
+                onStartSelection()
             }
+            toggle(f)
             true
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private fun toggle(f: File) {
-        if (selected.contains(f)) selected.remove(f) else selected.add(f)
-
-        if (selected.isEmpty()) selectionMode = false
+        if (selected.contains(f)) selected.remove(f)
+        else selected.add(f)
 
         notifyDataSetChanged()
+
         onSelectionChanged(selected.size)
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearSelection(notify: Boolean = true) {
         selected.clear()
-        selectionMode = false
         notifyDataSetChanged()
         if (notify) onSelectionChanged(0)
     }
